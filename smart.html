@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Жардамчы — Dark + Excel + Teachers</title>
+  <link rel="stylesheet" href="smart.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal">
+      <h2>🎓 Добро пожаловать в Smart Жардамчы</h2>
+      <p>Введите имя, чтобы персонализировать расписание.</p>
+      <div class="field">
+        <label>Ваше имя</label>
+        <input id="userNameInput" type="text" placeholder="Например: Анастасия"/>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="saveUserBtn">Продолжить</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">🧠</span>
+      <div class="titles">
+        <h1>Smart Жардамчы</h1>
+        <p id="greeting">Твой умный помощник</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn ghost" id="themeToggleBtn">🌙 Тема</button>
+      <button class="btn ghost" id="requestNotifBtn">🔔 Уведомления</button>
+      <button class="btn ghost" id="clearAllBtn">♻️ Сброс</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="schedule">📅 Расписание</button>
+    <button class="tab" data-tab="tasks">✅ Задачи</button>
+    <button class="tab" data-tab="stats">📊 Статистика</button>
+    <button class="tab" data-tab="integrations">🤖 Интеграции</button>
+    <button class="btn primary" id="openAIChatBtn">🤖 Открыть AI-ассистента</button>
+  </nav>
+
+  <main class="container">
+
+    <!-- Расписание -->
+    <section id="schedule" class="tab-panel active">
+      <div class="panel-header">
+        <h2>Расписание на неделю</h2>
+        <div class="panel-actions">
+          <input type="file" id="excelInput" accept=".xlsx,.xls" class="btn small" />
+          <button class="btn small" id="addLessonBtn">＋ Добавить пару</button>
+        </div>
+      </div>
+      <div class="week-grid" id="weekGrid"></div>
+    </section>
+
+    <!-- Задачи -->
+    <section id="tasks" class="tab-panel">
+      <h2>Мои задачи и дедлайны</h2>
+      <form id="taskForm" class="card form-card">
+        <div class="field">
+          <label>Задача</label>
+          <input id="taskText" type="text" placeholder="Например: Сдать лабу по программированию" required/>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Дедлайн</label>
+            <input id="taskDue" type="datetime-local" required/>
+          </div>
+          <div class="field">
+            <label>Приоритет</label>
+            <select id="taskPrio">
+              <option value="high">Высокий</option>
+              <option value="medium" selected>Средний</option>
+              <option value="low">Низкий</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="submit">Добавить задачу</button>
+        </div>
+      </form>
+      <div class="list" id="taskList"></div>
+    </section>
+
+    <!-- Статистика -->
+    <section id="stats" class="tab-panel">
+      <div class="cards-grid">
+        <div class="card kpi"><div class="kpi-num" id="kpiTotal">0</div><div class="kpi-label">Всего задач</div></div>
+        <div class="card kpi"><div class="kpi-num" id="kpiDone">0</div><div class="kpi-label">Выполнено</div></div>
+        <div class="card kpi"><div class="kpi-num" id="kpiRate">0%</div><div class="kpi-label">Продуктивность</div></div>
+        <div class="card kpi"><div class="kpi-num" id="kpiNext">—</div><div class="kpi-label">Ближайший дедлайн</div></div>
+      </div>
+      <div class="card">
+        <h3>🔥 Горящие дедлайны</h3>
+        <div id="hotList" class="list"></div>
+      </div>
+    </section>
+
+    <!-- Telegram -->
+    <section id="integrations" class="tab-panel">
+      <div class="card">
+        <h3>Интеграция с Telegram</h3>
+        <p>Введите ваш @username и протестируйте отправку уведомления.</p>
+        <div class="row">
+          <div class="field"><label>@username</label><input id="tgUser" type="text" placeholder="@anastasia_kim"/></div>
+          <div class="actions">
+            <button class="btn primary" id="tgConnectBtn">Подключить</button>
+            <button class="btn" id="tgTestBtn">Тест уведомления</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Модальное окно -->
+  <div class="modal-backdrop" id="lessonModal">
+    <div class="modal">
+      <h2>Добавить пару</h2>
+      <div class="row">
+        <div class="field">
+          <label>День недели</label>
+          <select id="lessonDay">
+            <option value="0">Понедельник</option>
+            <option value="1">Вторник</option>
+            <option value="2">Среда</option>
+            <option value="3">Четверг</option>
+            <option value="4">Пятница</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Время</label>
+          <input id="lessonTime" type="time" value="08:00"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Предмет, аудитория, преподаватель</label>
+        <input id="lessonTitle" type="text" placeholder="Программирование (312, Ким А.Н.)"/>
+      </div>
+      <div class="actions">
+        <button class="btn" id="cancelLessonBtn">Отмена</button>
+        <button class="btn primary" id="saveLessonBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <footer class="app-footer">© 2025 Smart Schedule — с Excel и преподавателями</footer>
+  <script src="smart.js"></script>
+</body>
+</html>
